@@ -6,7 +6,7 @@ import AITab from './tabs/AITab'
 
 const TABS = ['FLOW', 'AI', 'DISC', 'ECON']
 
-export default function RightSidebar({ ticker = 'NVDA' }) {
+export default function RightSidebar({ ticker = 'NVDA', flowFilter = '$50k+' }) {
   const [active, setActive] = useState('FLOW')
 
   return (
@@ -29,7 +29,7 @@ export default function RightSidebar({ ticker = 'NVDA' }) {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">
-        {active === 'FLOW' && <FlowTab ticker={ticker} />}
+        {active === 'FLOW' && <FlowTab ticker={ticker} flowFilter={flowFilter} />}
         {active === 'ECON' && <EconTab />}
         {active === 'DISC' && <DiscTab />}
         {active === 'AI'   && <AITab ticker={ticker} />}

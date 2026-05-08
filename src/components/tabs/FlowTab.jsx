@@ -45,6 +45,8 @@ const BORDER_COLOR = { true: '#00ff88', false: '#ff0055', null: '#f59e0b' }
 const TYPE_COLOR   = { SWEEP: '#00ff88', BLOCK: '#38bdf8', SPLIT: '#f59e0b' }
 const MAX_EVENTS   = 60
 
+const FILTER_THRESHOLDS = { '$50k+': 50_000, '$100k+': 100_000, '$500k+': 500_000, '$1M+': 1_000_000 }
+
 const SEED = Array.from({ length: 8 }, genEvent)
 
 // ── Single row ──────────────────────────────────────────────────────────────
@@ -87,7 +89,7 @@ function TapeRow({ event }) {
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
-export default function FlowTab() {
+export default function FlowTab({ flowFilter = '$50k+' }) {
   const [events, setEvents] = useState(SEED)
   const [buffer, setBuffer] = useState([])
   const [paused, setPaused] = useState(false)
@@ -122,6 +124,9 @@ export default function FlowTab() {
     setPaused(v => !v)
   }
 
+  const minSize = FILTER_THRESHOLDS[flowFilter] ?? 50_000
+  const visibleEvents = events.filter(ev => ev.sizeVal >= minSize)
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
 
@@ -152,7 +157,10 @@ export default function FlowTab() {
       {/* ── Tape list + freeze overlay ──────────────────────────────────── */}
       <div className="relative flex-1 overflow-hidden min-h-0">
         <div className="h-full overflow-y-auto">
-          {events.map(ev => <TapeRow key={ev.id} event={ev} />)}
+          {visibleEvents.map(ev => <TapeRow key={ev.id} event={ev} />)}
+          {visibleEvents.length === 0 && (
+            <div className="px-3 py-4 text-[9px] font-mono text-slate-700">No flow above {flowFilter}</div>
+          )}
         </div>
 
         {/* Freeze overlay — sits over list only, header stays interactive */}

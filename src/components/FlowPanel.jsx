@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 const FLOW_DATA = [
   { ticker: 'NVDA', contract: '930C 5/17', price: '$2.45', size: '$892K', sizeVal: 892_000,  type: 'SWEEP', bull: true  },
@@ -9,25 +9,17 @@ const FLOW_DATA = [
 ]
 
 const FILTERS = [
-  { label: '$50k+',  threshold: 50_000  },
-  { label: '$100k+', threshold: 100_000 },
-  { label: '$500k+', threshold: 500_000 },
+  { label: '$50k+',  threshold: 50_000    },
+  { label: '$100k+', threshold: 100_000   },
+  { label: '$500k+', threshold: 500_000   },
+  { label: '$1M+',   threshold: 1_000_000 },
 ]
 
 const LEFT_BORDER = { true: '#00ff88', false: '#ff0055', null: '#f59e0b' }
 const TYPE_COLOR  = { SWEEP: '#00ff88', BLOCK: '#38bdf8', SPLIT: '#f59e0b' }
 
-export default function FlowPanel({ frozen, liveFlows = [] }) {
-  const [filterLabel, setFilterLabel] = useState(
-    () => localStorage.getItem('td_flow_filter') ?? '$50k+'
-  )
-
-  function handleFilter(label) {
-    setFilterLabel(label)
-    localStorage.setItem('td_flow_filter', label)
-  }
-
-  const threshold = FILTERS.find(f => f.label === filterLabel)?.threshold ?? 50_000
+export default function FlowPanel({ frozen, liveFlows = [], flowFilter, onFlowFilter }) {
+  const threshold = FILTERS.find(f => f.label === flowFilter)?.threshold ?? 50_000
   // Merge live events (newest first) on top of static seed data, then filter
   const merged  = [...liveFlows, ...FLOW_DATA]
   const visible = merged.filter(row => row.sizeVal >= threshold).slice(0, 20)
@@ -43,10 +35,10 @@ export default function FlowPanel({ frozen, liveFlows = [] }) {
           {FILTERS.map(({ label }) => (
             <button
               key={label}
-              onClick={() => handleFilter(label)}
+              onClick={() => onFlowFilter(label)}
               className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
               style={
-                filterLabel === label
+                flowFilter === label
                   ? { borderColor: '#00ff88', color: '#00ff88', backgroundColor: 'rgba(0,255,136,0.07)', boxShadow: '0 0 0 1px #00ff88' }
                   : { borderColor: '#1e3352', color: '#475569' }
               }
@@ -77,7 +69,7 @@ export default function FlowPanel({ frozen, liveFlows = [] }) {
         ))}
 
         {visible.length === 0 && (
-          <div className="px-2 py-3 text-[9px] font-mono text-slate-700">No flow above {filterLabel}</div>
+          <div className="px-2 py-3 text-[9px] font-mono text-slate-700">No flow above {flowFilter}</div>
         )}
       </div>
 

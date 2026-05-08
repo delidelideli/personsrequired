@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 
-export default function Footer({ frozen, onFreeze, onDetach, iosSync, onIosSync }) {
-  const [muted, setMuted] = useState(false)
+export default function Footer({ frozen, onFreeze, onDetach, iosSync, onIosSync, muted, onMute, onSettings }) {
 
   return (
     <div className="flex items-center gap-2 px-3 h-8 border-t border-[#1e3352] bg-[#0c1119] shrink-0">
@@ -48,7 +47,7 @@ export default function Footer({ frozen, onFreeze, onDetach, iosSync, onIosSync 
 
       {/* Mute */}
       <button
-        onClick={() => setMuted(v => !v)}
+        onClick={onMute}
         className="text-[10px] transition-colors"
         style={{ color: muted ? '#1e3352' : '#475569' }}
         title={muted ? 'Unmute alerts' : 'Mute alerts'}
@@ -56,7 +55,12 @@ export default function Footer({ frozen, onFreeze, onDetach, iosSync, onIosSync 
         {muted ? '🔕' : '🔔'}
       </button>
 
-      <button className="text-[10px] text-[#1e3352]" title="Settings — Phase 2">⚙</button>
+      <button
+        onClick={onSettings}
+        className="text-[10px] transition-colors"
+        style={{ color: '#475569' }}
+        title="Settings"
+      >⚙</button>
     </div>
   )
 }

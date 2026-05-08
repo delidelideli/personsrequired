@@ -530,3 +530,70 @@ Comprehensive guide covering everything needed to go from demo to production:
 - Performance notes (debounce, caching, flow tape cap)
 
 **Build result:** `npm run build` — 88 modules, 0 errors, 396 KB JS (125 KB gzip).
+
+---
+
+## 2026-05-08 (session 11)
+
+### Settings Modal — Full Implementation
+
+Completed the settings panel. The ⚙ button in the footer now opens a modal with 6 sections covering all user-configurable options.
+
+#### New file: `src/components/SettingsModal.jsx`
+
+560px modal centred over the app. Clicking the backdrop closes it. Left nav (w-32) + scrollable right content.
+
+| Section | Controls |
+|---------|----------|
+| Appearance | Chart height S/M/L (200/280/360 px); theme/font display (read-only) |
+| Overlays | 8 toggles — VWAP, EMA 20/50/200, PDH, PDL, PMH, PML; each with color dot and description |
+| Watchlist | Reorder (↑↓) and remove (×) tickers; active ticker highlighted; add-via-+ reminder hint |
+| Alerts | Mute all alerts toggle; flow size filter ($50k+ / $100k+ / $500k+ / $1M+) |
+| Connection | Server URL display; LIVE/DEMO status badge; CLEAR & RELOAD session button |
+| Account | PRO plan badge; email display; SIGN OUT button |
+
+#### State lifted to `src/App.jsx`
+
+| State | Key | Default | Storage |
+|-------|-----|---------|---------|
+| `muted` | `td_muted` | `false` | chrome.storage |
+| `flowFilter` | `td_flow_filter` | `'$50k+'` | chrome.storage |
+| `chartHeight` | `td_chart_height` | `280` | chrome.storage |
+| `showSettings` | — | `false` | (ephemeral) |
+
+New helper functions:
+- `removeFromWatchlist(symbol)` — removes ticker, auto-switches to first remaining if active
+- `moveWatchlistItem(from, to)` — reorders watchlist array; bounds-checked
+
+#### Updated: `src/components/Footer.jsx`
+
+- Removed local `muted` state
+- Accepts `muted`, `onMute`, `onSettings` props
+- ⚙ button now calls `onSettings` (was a dimmed placeholder)
+
+#### Updated: `src/components/FlowPanel.jsx`
+
+- Removed local `filterLabel` state and `localStorage` calls
+- Accepts `flowFilter` and `onFlowFilter` props
+- Added `$1M+` as fourth filter option (threshold: 1,000,000)
+
+#### Updated: `src/components/tabs/FlowTab.jsx`
+
+- Accepts `flowFilter` prop (default `'$50k+'`)
+- Filters visible events in real-time: `events.filter(ev => ev.sizeVal >= FILTER_THRESHOLDS[flowFilter])`
+- Empty state: "No flow above {flowFilter}"
+
+#### Updated: `src/components/RightSidebar.jsx`
+
+- Accepts and threads `flowFilter` prop down to `FlowTab`
+
+#### Chart height: Tailwind-safe lookup table
+
+```js
+const CHART_HEIGHT_CLASS = { 200: 'h-[200px]', 280: 'h-[280px]', 360: 'h-[360px]' }
+// ChartPanel wrapClass:
+`${CHART_HEIGHT_CLASS[chartHeight] ?? 'h-[280px]'} shrink-0`
+```
+Template literals are not safe with Tailwind's purge — all class strings must appear as literals.
+
+**Build result:** `npm run build` — 89 modules, 0 errors, 405 KB JS (128 KB gzip).
