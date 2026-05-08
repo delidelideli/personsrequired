@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createChart, LineStyle, CrosshairMode } from 'lightweight-charts'
-import { generateCandles, calcEMA, calcVWAP, calcLevels } from '../lib/chartData'
+import { generateCandles, calcEMA, calcSMA, calcBB, calcIchimoku, calcVWAP, calcLevels } from '../lib/chartData'
 import { tfIsDaily } from '../lib/timeframeUtils'
 import { SERVER_URL } from '../lib/config'
 
@@ -168,8 +168,36 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
     const ema200Series = chart.addLineSeries({
       ...shared, color: '#a855f7', lineWidth: 1,
     })
+    const maSeries = chart.addLineSeries({
+      ...shared, color: '#cbd5e1', lineWidth: 1,
+    })
+    const bbUpperSeries = chart.addLineSeries({
+      ...shared, color: '#f97316', lineWidth: 1, lineStyle: LineStyle.Dashed,
+    })
+    const bbMiddleSeries = chart.addLineSeries({
+      ...shared, color: '#f97316', lineWidth: 1, lineStyle: LineStyle.Dotted,
+    })
+    const bbLowerSeries = chart.addLineSeries({
+      ...shared, color: '#f97316', lineWidth: 1, lineStyle: LineStyle.Dashed,
+    })
+    const ichTenkanSeries = chart.addLineSeries({
+      ...shared, color: '#f43f5e', lineWidth: 1,
+    })
+    const ichKijunSeries = chart.addLineSeries({
+      ...shared, color: '#818cf8', lineWidth: 1,
+    })
+    const ichSpanASeries = chart.addLineSeries({
+      ...shared, color: '#34d399', lineWidth: 1, lineStyle: LineStyle.Dashed,
+    })
+    const ichSpanBSeries = chart.addLineSeries({
+      ...shared, color: '#fb923c', lineWidth: 1, lineStyle: LineStyle.Dashed,
+    })
 
-    seriesRef.current = { candleSeries, volSeries, vwapSeries, ema20Series, ema50Series, ema200Series }
+    seriesRef.current = {
+      candleSeries, volSeries, vwapSeries, ema20Series, ema50Series, ema200Series,
+      maSeries, bbUpperSeries, bbMiddleSeries, bbLowerSeries,
+      ichTenkanSeries, ichKijunSeries, ichSpanASeries, ichSpanBSeries,
+    }
 
     // ── Crosshair → tooltip ────────────────────────────────────────────
     chart.subscribeCrosshairMove(param => {
@@ -217,7 +245,9 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
 
   // ── Load / reload data when ticker or timeframe changes ─────────────────
   useEffect(() => {
-    const { candleSeries, volSeries, vwapSeries, ema20Series, ema50Series, ema200Series } = seriesRef.current
+    const { candleSeries, volSeries, vwapSeries, ema20Series, ema50Series, ema200Series,
+            maSeries, bbUpperSeries, bbMiddleSeries, bbLowerSeries,
+            ichTenkanSeries, ichKijunSeries, ichSpanASeries, ichSpanBSeries } = seriesRef.current
     if (!candleSeries) return
 
     const controller = new AbortController()
@@ -242,7 +272,9 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
         value: c.volume,
         color: c.close >= c.open ? 'rgba(0,255,136,0.22)' : 'rgba(255,0,85,0.22)',
       }))
-      const levels = calcLevels(candles)
+      const levels  = calcLevels(candles)
+      const bb      = calcBB(candles)
+      const ichi    = calcIchimoku(candles)
 
       candleSeries.setData(candles)
       volSeries.setData(volData)
@@ -250,6 +282,14 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
       ema20Series.setData(calcEMA(candles, 20))
       ema50Series.setData(calcEMA(candles, 50))
       ema200Series.setData(calcEMA(candles, 200))
+      maSeries.setData(calcSMA(candles, 20))
+      bbUpperSeries.setData(bb.upper)
+      bbMiddleSeries.setData(bb.middle)
+      bbLowerSeries.setData(bb.lower)
+      ichTenkanSeries.setData(ichi.tenkan)
+      ichKijunSeries.setData(ichi.kijun)
+      ichSpanASeries.setData(ichi.spanA)
+      ichSpanBSeries.setData(ichi.spanB)
 
       const prev = linesRef.current
       if (prev.pdh) candleSeries.removePriceLine(prev.pdh)
@@ -292,13 +332,23 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
 
   // ── Sync overlay visibility ──────────────────────────────────────────────
   useEffect(() => {
-    const { vwapSeries, ema20Series, ema50Series, ema200Series } = seriesRef.current
+    const { vwapSeries, ema20Series, ema50Series, ema200Series,
+            maSeries, bbUpperSeries, bbMiddleSeries, bbLowerSeries,
+            ichTenkanSeries, ichKijunSeries, ichSpanASeries, ichSpanBSeries } = seriesRef.current
     if (!vwapSeries) return
 
-    vwapSeries.applyOptions({ visible: overlays.vwap })
-    ema20Series.applyOptions({ visible: overlays.ema20 })
-    ema50Series.applyOptions({ visible: overlays.ema50 })
-    ema200Series.applyOptions({ visible: overlays.ema200 })
+    vwapSeries.applyOptions({ visible: !!overlays.vwap })
+    ema20Series.applyOptions({ visible: !!overlays.ema20 })
+    ema50Series.applyOptions({ visible: !!overlays.ema50 })
+    ema200Series.applyOptions({ visible: !!overlays.ema200 })
+    maSeries.applyOptions({ visible: !!overlays.ma })
+    bbUpperSeries.applyOptions({ visible: !!overlays.bb })
+    bbMiddleSeries.applyOptions({ visible: !!overlays.bb })
+    bbLowerSeries.applyOptions({ visible: !!overlays.bb })
+    ichTenkanSeries.applyOptions({ visible: !!overlays.ichimoku })
+    ichKijunSeries.applyOptions({ visible: !!overlays.ichimoku })
+    ichSpanASeries.applyOptions({ visible: !!overlays.ichimoku })
+    ichSpanBSeries.applyOptions({ visible: !!overlays.ichimoku })
 
     // Price lines toggled via color — hide by matching background color
     const hide = 'rgba(0,0,0,0)'

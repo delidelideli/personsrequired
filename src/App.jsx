@@ -19,6 +19,7 @@ const DEFAULT_WATCHLIST = ['NVDA', 'TSLA', 'META', 'AAPL', 'SPY', 'AMD']
 const DEFAULT_OVERLAYS  = {
   vwap: true, ema20: true, ema50: false, ema200: false,
   pdh:  true, pdl:  true,  pmh:  false,  pml:   false,
+  ma: false, bb: false, ichimoku: false,
 }
 const CHART_HEIGHT_CLASS = { 200: 'h-[200px]', 280: 'h-[280px]', 360: 'h-[360px]' }
 
@@ -34,7 +35,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [toast,        setToast]        = useState(null)
   const [muted,        setMuted]        = useState(false)
-  const [flowFilter,   setFlowFilter]   = useState('$50k+')
+  const [flowFilter,   setFlowFilter]   = useState('$100K+')
   const [chartHeight,  setChartHeight]  = useState(280)
 
   // ── Load persisted state on mount ───────────────────────────────────────

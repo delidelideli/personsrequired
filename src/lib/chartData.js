@@ -94,6 +94,50 @@ export function calcVWAP(candles) {
   })
 }
 
+// ── SMA ────────────────────────────────────────────────────────────────────
+export function calcSMA(candles, period) {
+  const out = []
+  for (let i = period - 1; i < candles.length; i++) {
+    const slice = candles.slice(i - period + 1, i + 1)
+    const mean = slice.reduce((s, c) => s + c.close, 0) / period
+    out.push({ time: candles[i].time, value: +mean.toFixed(2) })
+  }
+  return out
+}
+
+// ── Bollinger Bands (SMA ± N·σ) ───────────────────────────────────────────
+export function calcBB(candles, period = 20, mult = 2) {
+  const upper = [], middle = [], lower = []
+  for (let i = period - 1; i < candles.length; i++) {
+    const slice = candles.slice(i - period + 1, i + 1)
+    const mean = slice.reduce((s, c) => s + c.close, 0) / period
+    const std  = Math.sqrt(slice.reduce((s, c) => s + (c.close - mean) ** 2, 0) / period)
+    upper.push({ time: candles[i].time, value: +(mean + mult * std).toFixed(2) })
+    middle.push({ time: candles[i].time, value: +mean.toFixed(2) })
+    lower.push({ time: candles[i].time, value: +(mean - mult * std).toFixed(2) })
+  }
+  return { upper, middle, lower }
+}
+
+// ── Ichimoku (Tenkan 9 / Kijun 26 / Senkou A / Senkou B 52) ───────────────
+export function calcIchimoku(candles) {
+  function hl2(slice) {
+    return (Math.max(...slice.map(c => c.high)) + Math.min(...slice.map(c => c.low))) / 2
+  }
+  const T = 9, K = 26, B = 52
+  const tenkan = [], kijun = [], spanA = [], spanB = []
+  for (let i = B - 1; i < candles.length; i++) {
+    const t = hl2(candles.slice(i - T + 1, i + 1))
+    const k = hl2(candles.slice(i - K + 1, i + 1))
+    const b = hl2(candles.slice(i - B + 1, i + 1))
+    tenkan.push({ time: candles[i].time, value: +t.toFixed(2) })
+    kijun.push({  time: candles[i].time, value: +k.toFixed(2) })
+    spanA.push({  time: candles[i].time, value: +((t + k) / 2).toFixed(2) })
+    spanB.push({  time: candles[i].time, value: +b.toFixed(2) })
+  }
+  return { tenkan, kijun, spanA, spanB }
+}
+
 // ── PDH / PDL / PMH / PML ─────────────────────────────────────────────────
 // Treat the first quarter of candles as "previous session" data.
 export function calcLevels(candles) {

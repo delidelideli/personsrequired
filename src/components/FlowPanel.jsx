@@ -9,9 +9,8 @@ const FLOW_DATA = [
 ]
 
 const FILTERS = [
-  { label: '$50k+',  threshold: 50_000    },
-  { label: '$100k+', threshold: 100_000   },
-  { label: '$500k+', threshold: 500_000   },
+  { label: '$100K+', threshold: 100_000   },
+  { label: '$500K+', threshold: 500_000   },
   { label: '$1M+',   threshold: 1_000_000 },
 ]
 

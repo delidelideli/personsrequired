@@ -19,9 +19,12 @@ const OVERLAY_LIST = [
   { key: 'pdl',    label: 'PDL',     color: '#38bdf8', desc: 'Previous Day Low'           },
   { key: 'pmh',    label: 'PMH',     color: '#ff0055', desc: 'Previous Month High'        },
   { key: 'pml',    label: 'PML',     color: '#38bdf8', desc: 'Previous Month Low'         },
+  { key: 'ma',      label: 'SMA 20',  color: '#cbd5e1', desc: 'Simple Moving Average'      },
+  { key: 'bb',      label: 'BB Bands',color: '#f97316', desc: 'Bollinger Bands (20, 2σ)'  },
+  { key: 'ichimoku',label: 'Ichimoku',color: '#34d399', desc: 'Ichimoku Cloud (9/26/52)'  },
 ]
 
-const FLOW_FILTERS  = ['$50k+', '$100k+', '$500k+', '$1M+']
+const FLOW_PRESETS  = ['$100K+', '$500K+', '$1M+']
 const CHART_HEIGHTS = [{ label: 'S', px: 200 }, { label: 'M', px: 280 }, { label: 'L', px: 360 }]
 
 function SectionLabel({ children }) {
@@ -65,7 +68,30 @@ export default function SettingsModal({
   connected,
   chartHeight, onChartHeight,
 }) {
-  const [section, setSection] = useState('appearance')
+  const [section,            setSection]            = useState('appearance')
+  const [savedFilters,       setSavedFilters]       = useState(
+    () => JSON.parse(localStorage.getItem('td_custom_filters') ?? '[]')
+  )
+  const [filterInputNum,  setFilterInputNum]  = useState('')
+  const [filterInputUnit, setFilterInputUnit] = useState('K')
+
+  function saveCustomFilter() {
+    const n = parseFloat(filterInputNum)
+    if (!n || n <= 0) return
+    const label = `$${Number.isInteger(n) ? n : n}${filterInputUnit}+`
+    const next  = savedFilters.includes(label) ? savedFilters : [...savedFilters, label]
+    setSavedFilters(next)
+    localStorage.setItem('td_custom_filters', JSON.stringify(next))
+    onFlowFilter(label)
+    setFilterInputNum('')
+  }
+
+  function removeCustomFilter(label) {
+    const next = savedFilters.filter(f => f !== label)
+    setSavedFilters(next)
+    localStorage.setItem('td_custom_filters', JSON.stringify(next))
+    if (flowFilter === label) onFlowFilter(FLOW_PRESETS[0])
+  }
 
   function clearSession() {
     sessionStorage.removeItem('td_token')
@@ -147,22 +173,70 @@ export default function SettingsModal({
         <Row label="Mute All Alerts">
           <Toggle on={muted} onToggle={onMute} color="#f59e0b" />
         </Row>
-        <Row label="Flow Size Filter">
-          {FLOW_FILTERS.map(f => (
-            <button
-              key={f}
-              onClick={() => onFlowFilter(f)}
-              className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
-              style={flowFilter === f
-                ? { borderColor: '#00ff88', color: '#00ff88', boxShadow: '0 0 0 1px #00ff88' }
-                : { borderColor: '#1e3352', color: '#475569' }
-              }
+
+        {/* Flow filter */}
+        <div className="py-2 border-b border-[#1e3352]">
+          <p className="text-[8px] font-mono text-slate-700 uppercase tracking-widest mb-2">Flow Size Filter</p>
+
+          {/* Preset + saved custom chips */}
+          <div className="flex flex-wrap gap-1 mb-3">
+            {FLOW_PRESETS.map(f => (
+              <button
+                key={f}
+                onClick={() => onFlowFilter(f)}
+                className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
+                style={flowFilter === f
+                  ? { borderColor: '#00ff88', color: '#00ff88', boxShadow: '0 0 0 1px #00ff88' }
+                  : { borderColor: '#1e3352', color: '#475569' }
+                }
+              >{f}</button>
+            ))}
+            {savedFilters.map(f => (
+              <div key={f} className="flex items-center">
+                <button
+                  onClick={() => onFlowFilter(f)}
+                  className="px-1.5 py-0.5 text-[9px] font-mono border-y border-l transition-all duration-100"
+                  style={flowFilter === f
+                    ? { borderColor: '#00ff88', color: '#00ff88', boxShadow: '0 0 0 1px #00ff88' }
+                    : { borderColor: '#1e3352', color: '#475569' }
+                  }
+                >{f}</button>
+                <button
+                  onClick={() => removeCustomFilter(f)}
+                  className="px-1 py-0.5 text-[9px] font-mono border-y border-r border-[#1e3352] text-slate-700 hover:text-[#ff0055] transition-colors leading-none"
+                >×</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Custom input */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-mono text-slate-600">$</span>
+            <input
+              type="number"
+              min="1"
+              value={filterInputNum}
+              onChange={e => setFilterInputNum(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveCustomFilter()}
+              placeholder="amount"
+              className="w-20 bg-transparent border border-[#1e3352] text-[9px] font-mono text-slate-300 px-1.5 py-0.5 outline-none focus:border-[#38bdf8] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <select
+              value={filterInputUnit}
+              onChange={e => setFilterInputUnit(e.target.value)}
+              className="bg-[#0c1119] border border-[#1e3352] text-[9px] font-mono text-slate-400 px-1 py-0.5 outline-none focus:border-[#38bdf8]"
             >
-              {f}
-            </button>
-          ))}
-        </Row>
-        <Hint>Flow filter also applies to the FLOW tab in the right panel.</Hint>
+              <option value="K">K</option>
+              <option value="M">M</option>
+            </select>
+            <button
+              onClick={saveCustomFilter}
+              className="px-2 py-0.5 text-[9px] font-mono border border-[#1e3352] text-slate-600 hover:border-[#00ff88] hover:text-[#00ff88] transition-colors"
+            >SAVE</button>
+          </div>
+        </div>
+
+        <Hint>Filter applies to the FLOW tab. Press Enter or SAVE to add a custom amount.</Hint>
       </>)
 
       case 'connection': return (<>

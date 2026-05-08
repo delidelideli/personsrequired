@@ -45,7 +45,15 @@ const BORDER_COLOR = { true: '#00ff88', false: '#ff0055', null: '#f59e0b' }
 const TYPE_COLOR   = { SWEEP: '#00ff88', BLOCK: '#38bdf8', SPLIT: '#f59e0b' }
 const MAX_EVENTS   = 60
 
-const FILTER_THRESHOLDS = { '$50k+': 50_000, '$100k+': 100_000, '$500k+': 500_000, '$1M+': 1_000_000 }
+function parseFilterThreshold(label) {
+  const m = String(label).match(/\$(\d+(?:\.\d+)?)(k|K|m|M)?\+/)
+  if (!m) return 100_000
+  const n = parseFloat(m[1])
+  const u = m[2]?.toLowerCase()
+  if (u === 'm') return Math.round(n * 1_000_000)
+  if (u === 'k') return Math.round(n * 1_000)
+  return Math.round(n)
+}
 
 const SEED = Array.from({ length: 8 }, genEvent)
 
@@ -124,7 +132,7 @@ export default function FlowTab({ flowFilter = '$50k+' }) {
     setPaused(v => !v)
   }
 
-  const minSize = FILTER_THRESHOLDS[flowFilter] ?? 50_000
+  const minSize = parseFilterThreshold(flowFilter)
   const visibleEvents = events.filter(ev => ev.sizeVal >= minSize)
 
   return (

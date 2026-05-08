@@ -57,7 +57,7 @@ export default function Footer({ frozen, onFreeze, onDetach, iosSync, onIosSync,
 
       <button
         onClick={onSettings}
-        className="text-[10px] transition-colors"
+        className="text-[14px] transition-colors hover:text-slate-300"
         style={{ color: '#475569' }}
         title="Settings"
       >⚙</button>
