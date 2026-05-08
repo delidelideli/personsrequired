@@ -88,73 +88,78 @@ export default function AITab({ ticker = 'NVDA' }) {
 
   const displayedTickers = [ticker, ...getCompanions(ticker)]
 
+  const CARD_LABELS = ['Signal', 'Risk Alert', 'Context', 'Watch']
+
   return (
     <div>
-      <div
-        className="flex items-center justify-between px-3 py-2 border-b border-[#1e3352]"
-        style={{ backgroundColor: 'rgba(245,158,11,0.05)' }}
-      >
-        <div>
-          <div className="text-[10px] font-mono font-semibold text-[#f59e0b]">9:25 AM THESIS</div>
-          <div className="text-[9px] font-mono text-slate-700 mt-0.5">Generated {timestamp}</div>
-        </div>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e3352]">
+        <span className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">AI Thesis</span>
         <button
           onClick={handleRefresh}
-          className="text-[9px] font-mono px-2 py-0.5 border border-[#1e3352] text-[#38bdf8] hover:border-[#38bdf8] transition-colors"
+          className="text-[9px] font-mono px-2 py-0.5 transition-colors text-slate-600 hover:text-[#38bdf8]"
         >
           ↻ REFRESH
         </button>
       </div>
 
-      {displayedTickers.map((t, idx) => {
-        const pool = THESIS_POOL[t]
-        const isActive = idx === 0
-        const data = pool
-          ? isActive
-            ? pool[refreshCount % pool.length]
-            : pool[0]
-          : FALLBACK
+      <div className="flex flex-col gap-2 p-2">
+        {displayedTickers.map((t, idx) => {
+          const pool = THESIS_POOL[t]
+          const isActive = idx === 0
+          const data = pool
+            ? isActive
+              ? pool[refreshCount % pool.length]
+              : pool[0]
+            : FALLBACK
+          const cardLabel = CARD_LABELS[idx] ?? t
 
-        return (
-          <div
-            key={t}
-            className="px-3 py-2.5 border-b border-[#1e3352]"
-            style={isActive ? { backgroundColor: 'rgba(255,255,255,0.02)' } : {}}
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-mono font-semibold text-slate-200">{t}</span>
-              <span
-                className="text-[8px] font-mono px-1.5 py-px font-semibold"
-                style={{
-                  color: data.color,
-                  backgroundColor: data.color + '18',
-                  border: `1px solid ${data.color}40`,
-                }}
-              >
-                {data.bias}
-              </span>
-            </div>
-
-            <p
-              className="text-[9px] font-mono text-slate-600 leading-relaxed mb-1.5 transition-opacity duration-200"
-              style={{ opacity: isActive && fading ? 0 : 1 }}
+          return (
+            <div
+              key={t}
+              className="flex flex-col gap-2 px-3 py-2.5"
+              style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid #1e3352' }}
             >
-              {data.thesis}
-            </p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-slate-500">{isActive ? cardLabel : t}</span>
+                <span className="text-[9px] font-mono text-slate-700">{timestamp}</span>
+              </div>
 
-            <div className="flex flex-wrap gap-1" style={{ opacity: isActive && fading ? 0 : 1 }}>
-              {data.tags.map(tag => (
+              <div>
                 <span
-                  key={tag}
-                  className="text-[8px] font-mono px-1 py-px border border-[#1e3352] text-slate-700 transition-opacity duration-200"
+                  className="text-[9px] font-mono px-2 py-0.5 font-bold"
+                  style={{
+                    backgroundColor: data.color + '28',
+                    color: data.color,
+                    borderRadius: '3px',
+                    border: `1px solid ${data.color}50`,
+                  }}
                 >
-                  {tag}
+                  {data.bias}
                 </span>
-              ))}
+              </div>
+
+              <p
+                className="text-[10px] font-mono text-slate-400 leading-relaxed transition-opacity duration-200"
+                style={{ opacity: isActive && fading ? 0 : 1 }}
+              >
+                {data.thesis}
+              </p>
+
+              <div className="flex flex-wrap gap-1" style={{ opacity: isActive && fading ? 0 : 1 }}>
+                {data.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="text-[8px] font-mono px-1.5 py-px text-slate-600"
+                    style={{ border: '1px solid #1e3352', borderRadius: '3px' }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

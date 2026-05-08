@@ -9,9 +9,10 @@ const FLOW_DATA = [
 ]
 
 const FILTERS = [
-  { label: '$50k+',  threshold: 50_000  },
-  { label: '$100k+', threshold: 100_000 },
-  { label: '$500k+', threshold: 500_000 },
+  { label: '$50K+',  threshold: 50_000   },
+  { label: '$100K+', threshold: 100_000  },
+  { label: '$500K+', threshold: 500_000  },
+  { label: '$1M+',   threshold: 1_000_000 },
 ]
 
 const LEFT_BORDER = { true: '#00ff88', false: '#ff0055', null: '#f59e0b' }
@@ -19,7 +20,7 @@ const TYPE_COLOR  = { SWEEP: '#00ff88', BLOCK: '#38bdf8', SPLIT: '#f59e0b' }
 
 export default function FlowPanel({ frozen, liveFlows = [] }) {
   const [filterLabel, setFilterLabel] = useState(
-    () => localStorage.getItem('td_flow_filter') ?? '$50k+'
+    () => localStorage.getItem('td_flow_filter') ?? '$50K+'
   )
 
   function handleFilter(label) {
@@ -34,21 +35,21 @@ export default function FlowPanel({ frozen, liveFlows = [] }) {
 
   return (
     <div className="relative flex flex-col flex-1 overflow-hidden min-h-0">
-      {/* Header + filter row */}
+      {/* Header + filter grid */}
       <div className="shrink-0">
-        <div className="px-2 py-1 border-b border-[#1e3352]">
-          <span className="text-[9px] font-mono text-slate-700 uppercase tracking-widest">Flow</span>
+        <div className="px-2 py-1.5 border-b border-[#1e3352]">
+          <span className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">Flow Filters</span>
         </div>
-        <div className="flex gap-1 px-2 py-1.5 border-b border-[#1e3352]">
+        <div className="grid grid-cols-2 gap-1.5 px-2 py-2 border-b border-[#1e3352]">
           {FILTERS.map(({ label }) => (
             <button
               key={label}
               onClick={() => handleFilter(label)}
-              className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
+              className="py-1 text-[9px] font-mono transition-all duration-100"
               style={
                 filterLabel === label
-                  ? { borderColor: '#00ff88', color: '#00ff88', backgroundColor: 'rgba(0,255,136,0.07)', boxShadow: '0 0 0 1px #00ff88' }
-                  : { borderColor: '#1e3352', color: '#475569' }
+                  ? { backgroundColor: 'rgba(0,255,136,0.12)', color: '#00ff88', border: '1px solid rgba(0,255,136,0.3)', borderRadius: '3px' }
+                  : { backgroundColor: 'rgba(255,255,255,0.03)', color: '#475569', border: '1px solid #1e3352', borderRadius: '3px' }
               }
             >
               {label}
@@ -77,7 +78,7 @@ export default function FlowPanel({ frozen, liveFlows = [] }) {
         ))}
 
         {visible.length === 0 && (
-          <div className="px-2 py-3 text-[9px] font-mono text-slate-700">No flow above {filterLabel}</div>
+          <div className="px-2 py-3 text-[9px] font-mono text-slate-700">No flow above {filterLabel.toLowerCase()}</div>
         )}
       </div>
 

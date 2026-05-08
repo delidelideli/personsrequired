@@ -18,11 +18,11 @@ export default function ChartControls({ timeframe, onTimeframeChange, overlays, 
           <button
             key={tf}
             onClick={() => onTimeframeChange(tf)}
-            className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
+            className="px-2.5 py-1 text-[10px] font-mono font-medium transition-all duration-100"
             style={
               timeframe === tf
-                ? { borderColor: '#38bdf8', color: '#38bdf8', boxShadow: '0 0 0 1px #38bdf8' }
-                : { borderColor: '#1e3352', color: '#475569' }
+                ? { backgroundColor: '#38bdf8', color: '#0c1119', borderRadius: '4px', border: '1px solid transparent' }
+                : { backgroundColor: 'rgba(255,255,255,0.05)', color: '#475569', borderRadius: '4px', border: '1px solid transparent' }
             }
           >
             {tf}
@@ -38,11 +38,11 @@ export default function ChartControls({ timeframe, onTimeframeChange, overlays, 
             <button
               key={key}
               onClick={() => onToggle(key)}
-              className="px-1.5 py-0.5 text-[9px] font-mono border transition-all duration-100"
+              className="px-2 py-1 text-[9px] font-mono transition-all duration-100"
               style={
                 on
-                  ? { borderColor: color, color, boxShadow: `0 0 0 1px ${color}` }
-                  : { borderColor: '#1e3352', color: '#475569' }
+                  ? { backgroundColor: color + '22', color, borderRadius: '4px', border: `1px solid ${color}55` }
+                  : { backgroundColor: 'rgba(255,255,255,0.03)', color: '#334155', borderRadius: '4px', border: '1px solid transparent' }
               }
             >
               {label}

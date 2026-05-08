@@ -17,13 +17,12 @@ export default function StatusBar({ indexPrices, connected, activeTicker = 'NVDA
     <div className="flex items-center justify-between h-7 px-3 border-b border-[#1e3352] bg-[#0c1119] shrink-0">
       <div className="flex items-center gap-5">
         {SYMBOLS.map(sym => {
-          const { price, change, up } = prices[sym] ?? DEFAULTS[sym]
+          const { price, up } = prices[sym] ?? DEFAULTS[sym]
           return (
             <div key={sym} className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-500">{sym}</span>
-              <span className="font-mono tabular-nums text-[10px] text-slate-300">{price}</span>
-              <span className={`text-[10px] font-mono tabular-nums ${up ? 'text-[#00ff88]' : 'text-[#ff0055]'}`}>
-                {change}
+              <span className="text-[10px] font-mono text-slate-600">{sym}</span>
+              <span className="font-mono tabular-nums text-[10px] font-semibold" style={{ color: up ? '#00ff88' : '#ff0055' }}>
+                {price}
               </span>
             </div>
           )

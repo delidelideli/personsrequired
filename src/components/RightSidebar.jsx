@@ -16,10 +16,10 @@ export default function RightSidebar({ ticker = 'NVDA' }) {
           <button
             key={tab}
             onClick={() => setActive(tab)}
-            className="flex-1 py-1.5 text-[10px] font-mono border-r border-[#1e3352] last:border-r-0 transition-colors"
+            className="flex-1 py-2 text-[10px] font-mono border-r border-[#1e3352] last:border-r-0 transition-colors"
             style={
               active === tab
-                ? { color: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.07)', boxShadow: 'inset 0 -1px 0 #38bdf8' }
+                ? { color: '#38bdf8', boxShadow: 'inset 0 -2px 0 #38bdf8' }
                 : { color: '#475569' }
             }
           >

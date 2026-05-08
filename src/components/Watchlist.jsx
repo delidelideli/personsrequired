@@ -58,7 +58,6 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
         const def      = DEFAULTS[symbol] ?? FALLBACK
         const live     = isActive && livePrice ? livePrice : null
         const price    = live ? String(live.price) : def.price
-        const change   = live ? live.changeP      : def.change
         const up       = live ? live.up            : def.up
         const strength = def.strength
 
@@ -66,32 +65,25 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
           <button
             key={symbol}
             onClick={() => onSelect?.(symbol)}
-            className="flex flex-col px-2 py-1.5 border-b border-[#1e3352] transition-colors text-left w-full"
-            style={
-              isActive
-                ? { backgroundColor: 'rgba(56,189,248,0.07)', borderLeft: '2px solid #38bdf8' }
-                : { borderLeft: '2px solid transparent' }
-            }
+            className="flex flex-col px-2 pt-2 pb-1.5 border-b border-[#1e3352] transition-colors text-left w-full"
+            style={isActive ? { backgroundColor: 'rgba(255,255,255,0.03)' } : {}}
           >
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full mb-1.5">
               <span
-                className="text-[10px] font-mono font-semibold"
-                style={{ color: isActive ? '#38bdf8' : '#cbd5e1' }}
+                className="text-[11px] font-mono font-bold"
+                style={{ color: isActive ? '#e2e8f0' : '#94a3b8' }}
               >
                 {symbol}
               </span>
-              <span className="text-[10px] font-mono tabular-nums" style={{ color: up ? '#00ff88' : '#ff0055' }}>
-                {change}
+              <span className="text-[11px] font-mono tabular-nums font-semibold text-slate-200">
+                {typeof price === 'number' ? price.toFixed(2) : price}
               </span>
             </div>
-            <div className="flex items-center justify-between w-full mt-0.5">
-              <span className="text-[10px] font-mono tabular-nums text-slate-500">{price}</span>
-              <div className="w-10 h-1 bg-[#1e3352] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${strength}%`, backgroundColor: up ? '#00ff88' : '#ff0055' }}
-                />
-              </div>
+            <div className="w-full h-[3px] bg-[#1a2535]">
+              <div
+                className="h-full"
+                style={{ width: `${strength}%`, backgroundColor: up ? '#00ff88' : '#ff0055' }}
+              />
             </div>
           </button>
         )
