@@ -7,7 +7,7 @@ if (chrome.sidePanel) {
     chrome.windows.create({
       url:     chrome.runtime.getURL('sidepanel.html'),
       type:    'popup',
-      width:   420,
+      width:   900,
       height:  900,
       focused: true,
     })
