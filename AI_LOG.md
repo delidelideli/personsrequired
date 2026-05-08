@@ -381,3 +381,23 @@ Live market breadth panel updating every 2.5 s (random walk simulation, same pat
 Each metric shows: large numeric value + contextual label + full-width 3px bar showing position within range.
 
 **Build result:** `npm run build` — 85 modules, 0 errors, 392 KB JS (124 KB gzip).
+
+#### Opera GX toolbar icon fix (`public/background.js`)
+
+Opera GX does not implement the `chrome.sidePanel` API so the toolbar icon did nothing. Fixed with a browser detection fallback in the background service worker:
+
+```js
+if (chrome.sidePanel) {
+  // Chrome — open as native side panel
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+} else {
+  // Opera GX / unsupported — open as popup window on icon click
+  chrome.action.onClicked.addListener(() => {
+    chrome.windows.create({ url: chrome.runtime.getURL('sidepanel.html'), type: 'popup', width: 900, height: 900 })
+  })
+}
+```
+
+- Chrome: side panel opens natively as before
+- Opera GX: clicking the toolbar icon opens a 900×900 popup window
+- Initial popup width was 420px (too narrow for the 3-column layout — content was cut off); bumped to 900px so all three columns have room to breathe
