@@ -1,5 +1,6 @@
 // Client-side simulation hub — mirrors the server's data streams.
 // Used automatically when the backend server is offline.
+import { tfToSeconds } from './timeframeUtils'
 
 // ── Base prices ─────────────────────────────────────────────────────────────
 const BASE = {
@@ -14,10 +15,6 @@ const VOLATILITY = {
   SPY: 0.0004, QQQ: 0.0004, DXY: 0.0003,
 }
 
-const CANDLE_MS = {
-  '1m': 60_000, '5m': 300_000, '15m': 900_000,
-  '1h': 3_600_000, '4h': 14_400_000, 'D': 86_400_000,
-}
 
 function walk(price, sym) {
   const vol = VOLATILITY[sym] ?? 0.0007
@@ -142,7 +139,7 @@ function tickFlow() {
 
 function start(ticker = 'NVDA', timeframe = '5m') {
   activeSym   = ticker
-  tfMs        = CANDLE_MS[timeframe] ?? 300_000
+  tfMs        = tfToSeconds(timeframe) * 1000
   candleStart = Math.floor(Date.now() / tfMs) * tfMs
   cOpen = cHigh = cLow = prices[ticker] ?? 100
 
@@ -159,7 +156,7 @@ function start(ticker = 'NVDA', timeframe = '5m') {
 
 function setTicker(ticker, timeframe) {
   activeSym   = ticker
-  tfMs        = CANDLE_MS[timeframe] ?? tfMs
+  tfMs        = tfToSeconds(timeframe) * 1000
   candleStart = Math.floor(Date.now() / tfMs) * tfMs
   cOpen = cHigh = cLow = prices[ticker] ?? prices[activeSym] ?? 100
 }

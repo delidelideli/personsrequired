@@ -9,6 +9,7 @@ import RightSidebar  from './components/RightSidebar'
 import Footer        from './components/Footer'
 import DetachModal   from './components/DetachModal'
 import Toast         from './components/Toast'
+import NotesPanel     from './components/NotesPanel'
 import { useMarketData } from './hooks/useMarketData'
 import { save, loadAll, onChange } from './lib/storage'
 
@@ -124,18 +125,31 @@ export default function App() {
       />
 
       <div className="flex flex-1 overflow-hidden min-h-0">
-        <div className="flex flex-col w-40 border-r border-[#1e3352] shrink-0 overflow-y-auto">
-          <Watchlist
-            tickers={watchlist}
-            activeTicker={ticker}
-            onSelect={setTicker}
-            onAdd={addToWatchlist}
-            livePrice={livePrice}
-          />
-        </div>
 
-        <div className="flex flex-col w-40 border-r border-[#1e3352] shrink-0 overflow-hidden">
-          <MarketInternals />
+        {/* Left two columns + notes spanning both */}
+        <div className="flex flex-col w-80 shrink-0 border-r border-[#1e3352] overflow-hidden">
+
+          {/* Top: Watchlist | Internals side by side */}
+          <div className="flex flex-[3] min-h-0 overflow-hidden">
+            <div className="flex flex-col w-40 border-r border-[#1e3352] overflow-hidden">
+              <Watchlist
+                tickers={watchlist}
+                activeTicker={ticker}
+                onSelect={setTicker}
+                onAdd={addToWatchlist}
+                livePrice={livePrice}
+              />
+            </div>
+            <div className="flex flex-col w-40 overflow-hidden">
+              <MarketInternals />
+            </div>
+          </div>
+
+          {/* Bottom: Notes spanning full w-80 */}
+          <div className="flex flex-[2] min-h-0 overflow-hidden">
+            <NotesPanel />
+          </div>
+
         </div>
 
         <div className="flex-1 overflow-hidden min-w-0">

@@ -1,3 +1,5 @@
+import { tfToSeconds, tfBarCount } from './timeframeUtils'
+
 // ── Seeded PRNG (LCG) ─────────────────────────────────────────────────────
 // Produces consistent data for the same ticker+timeframe across renders.
 function createRng(seed) {
@@ -21,14 +23,11 @@ const BASE = {
   AAPL: 189.67, SPY:  524.83, AMD:  172.44,
 }
 
-const BAR_SEC = { '1m': 60, '5m': 300, '15m': 900, '1h': 3600, '4h': 14400, 'D': 86400, 'W': 604800 }
-const BAR_COUNT = { '1m': 240, '5m': 240, '15m': 200, '1h': 200, '4h': 180, 'D': 200, 'W': 100 }
-
 // ── OHLCV generation ───────────────────────────────────────────────────────
 export function generateCandles(ticker = 'NVDA', timeframe = '5m') {
   const base  = BASE[ticker] ?? 100
-  const bSec  = BAR_SEC[timeframe]  ?? 300
-  const count = BAR_COUNT[timeframe] ?? 200
+  const bSec  = tfToSeconds(timeframe)
+  const count = tfBarCount(bSec)
   const rand  = createRng(ticker2seed(ticker, timeframe))
 
   // Volatility scales with bar duration and price magnitude

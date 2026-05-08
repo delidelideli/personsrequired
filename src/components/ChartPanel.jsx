@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createChart, LineStyle, CrosshairMode } from 'lightweight-charts'
 import { generateCandles, calcEMA, calcVWAP, calcLevels } from '../lib/chartData'
+import { tfIsDaily } from '../lib/timeframeUtils'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtPrice(v) { return v?.toFixed(2) ?? '—' }
@@ -17,7 +18,7 @@ function fmtTime(time, timeframe) {
     return `${time.month}/${time.day}/${time.year}`
   }
   const d = new Date(time * 1000)
-  if (timeframe === 'D' || timeframe === 'W') {
+  if (tfIsDaily(timeframe)) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
   return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -252,7 +253,7 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
 
     // Show/hide time component based on timeframe
     chartRef.current?.timeScale().applyOptions({
-      timeVisible: !['D', 'W'].includes(timeframe),
+      timeVisible: !tfIsDaily(timeframe),
     })
 
     chartRef.current?.timeScale().fitContent()

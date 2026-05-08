@@ -24,8 +24,8 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
   }
 
   return (
-    <div className="flex flex-col shrink-0">
-      <div className="flex items-center justify-between px-2 py-1 border-b border-[#1e3352]">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex items-center justify-between px-2 py-1 border-b border-[#1e3352] shrink-0 bg-[#0c1119]">
         <span className="text-[9px] font-mono text-slate-700 uppercase tracking-widest">Watchlist</span>
         <button
           onClick={() => setAdding(v => !v)}
@@ -36,7 +36,7 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
       </div>
 
       {adding && (
-        <form onSubmit={handleAddSubmit} className="flex border-b border-[#1e3352]">
+        <form onSubmit={handleAddSubmit} className="flex border-b border-[#1e3352] shrink-0 bg-[#0c1119]">
           <input
             autoFocus
             value={addInput}
@@ -53,6 +53,7 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
         </form>
       )}
 
+      <div className="flex-1 overflow-y-auto">
       {tickers.map(symbol => {
         const isActive = symbol === activeTicker
         const def      = DEFAULTS[symbol] ?? FALLBACK
@@ -96,6 +97,7 @@ export default function Watchlist({ tickers, activeTicker, onSelect, onAdd, live
           </button>
         )
       })}
+      </div>
     </div>
   )
 }

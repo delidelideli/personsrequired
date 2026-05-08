@@ -401,3 +401,68 @@ if (chrome.sidePanel) {
 - Chrome: side panel opens natively as before
 - Opera GX: clicking the toolbar icon opens a 900×900 popup window
 - Initial popup width was 420px (too narrow for the 3-column layout — content was cut off); bumped to 900px so all three columns have room to breathe
+
+---
+
+## 2026-05-08 (session 9)
+
+### UI Polish — Layout Alignment, Interval Controls, Notes Panel, Universal Timeframe Support
+
+#### ChartControls — interval bar additions + custom interval popup
+
+**File changed:** `src/components/ChartControls.jsx`
+
+- Added `30m` and `4h` to the main timeframe button bar: `1m | 5m | 15m | 30m | 1h | 4h | D | ···`
+- `···` custom interval button opens a popup with two sections:
+  - **Quick Select** — default chips: `3m | 10m | 30m | 4h | W | M`; saved customs appear inline after them with a `×` to remove
+  - **Custom** — number input + `min`/`hr` dropdown selector + `USE` (apply only) / `SAVE` (apply + pin to lineup) buttons
+- Saved custom intervals persist to `localStorage` (`td_custom_tfs`); duplicates against defaults are prevented
+- Active custom button displays the chosen value (e.g. `6H`) with purple glow (`#a855f7`)
+
+#### Watchlist — scrollable list, pinned header
+
+**File changed:** `src/components/Watchlist.jsx`
+
+- Root div changed from `shrink-0` to `h-full overflow-hidden`
+- Header (`Watchlist` label + `+` button) and add-ticker form are `shrink-0` / pinned
+- Ticker list wrapped in `flex-1 overflow-y-auto` — scrolls independently when more tickers are added
+
+#### MarketInternals — matched to Watchlist visual spec
+
+**File changed:** `src/components/MarketInternals.jsx`
+
+- Header changed to `flex items-center px-2 py-1` — pixel-identical to Watchlist header
+- All metric rows (`NYSE TICK`, `TRIN`, `PUT/CALL`, `ADV/DEC`, `VIX`) rewritten as `MetricRow` component:
+  - `px-2 py-1.5 border-b border-[#1e3352]` — same padding as watchlist ticker rows
+  - Line 1: label (dim, 9px) left / value + status tag right
+  - `mt-0.5` gap + full-width `h-1` bar — matches watchlist row exactly
+- NYSE TICK value formatted as `Math.abs(tick / 1000).toFixed(3)` → always `X.XXX` length (e.g. `0.342`); color still indicates direction
+
+#### Layout restructure — Notes panel spanning both left columns
+
+**Files changed:** `src/App.jsx`, `src/components/NotesPanel.jsx` (new)
+
+- Left two columns wrapped in a single `flex-col w-80 shrink-0 border-r` container
+- Top section (`flex-[3]`): Watchlist (`w-40 border-r`) | MarketInternals (`w-40`) side by side
+- Bottom section (`flex-[2]`): `NotesPanel` spanning full `w-80` width
+- `NotesPanel`: same header style as Watchlist/Internals; `<textarea>` fills remaining space — JetBrains Mono, no spell-check, no resize handle
+
+#### Universal timeframe support — shared parser
+
+**New file:** `src/lib/timeframeUtils.js`
+
+| Export | Purpose |
+|--------|---------|
+| `tfToSeconds(tf)` | Converts any timeframe string to seconds — handles built-ins (`1m`→60, `4h`→14400, `D`→86400, `W`→604800, `M`→2592000) and custom strings (`6H`, `45M`, `2H`, etc.) |
+| `tfBarCount(secs)` | Returns appropriate bar count for a given duration |
+| `tfIsDaily(tf)` | True when timeframe is daily or longer (used for axis label format) |
+
+**Files updated to use the parser:**
+
+| File | Change |
+|------|--------|
+| `src/lib/mockDataService.js` | Removed `CANDLE_MS` lookup table; `start()` and `setTicker()` now call `tfToSeconds(timeframe) * 1000` — live tick boundaries work for any interval |
+| `src/lib/chartData.js` | Removed `BAR_SEC` / `BAR_COUNT` lookup tables; `generateCandles()` calls `tfToSeconds` + `tfBarCount` — historical data generated correctly for any timeframe |
+| `src/components/ChartPanel.jsx` | `fmtTime` and `timeVisible` flag now use `tfIsDaily()` instead of hardcoded `['D','W']` check |
+
+**Build result:** `npm run build` — 87 modules, 0 errors, 396 KB JS (125 KB gzip).
