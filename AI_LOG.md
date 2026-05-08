@@ -324,3 +324,60 @@ Floating notification bar: fades in on mount, auto-dismisses after 2.2 s, calls 
 - `syncOn` local state removed; now receives `iosSync` + `onIosSync` props from App.jsx
 
 **Build result:** `npm run build` — 85 modules, 0 errors, 391 KB JS (124 KB gzip).
+
+---
+
+## 2026-05-08 (session 8)
+
+### UI/UX Explorations — Figma Refresh Branch + Layout Restructure
+
+#### Figma design refresh (`design-refresh` branch)
+
+Friend provided a Figma mockup (`figmathing.png`) for a visual upgrade. All changes made on a separate `design-refresh` branch as a safety net — `main` always preserved the original design.
+
+Components rewritten to match Figma style:
+
+| Component | Change |
+|-----------|--------|
+| `StatusBar.jsx` | Simplified: shows label (dim) + price coloured by direction only; removed separate change% column |
+| `TickerHeader.jsx` | 56px bar: ticker (click-to-edit search) left, 28px hero price centre, ↗/↘ + changeP% right, market status pill |
+| `ChartControls.jsx` | Active timeframe: solid filled `#38bdf8` bg with dark text, 4px border-radius. Inactive: subtle dark fill. Overlay toggles: tinted active state |
+| `Watchlist.jsx` | Ticker + price on one row, full-width 3px momentum bar below; removed small right-side bar and change% |
+| `FlowPanel.jsx` | "Flow Filters" header, 2×2 button grid, added `$1M+` as fourth filter threshold |
+| `AITab.jsx` | Cards with elevated bg + 1px border; solid filled bias badges; "Signal"/"Risk Alert" card labels with timestamp; tag pills outlined |
+| `Footer.jsx` | Live green dot + "Live" text left; solid filled Pause/Play button centre; iOS/detach/mute as minimal icon buttons; live ticking clock right |
+| `RightSidebar.jsx` | Active tab: 2px blue underline only, no background tint |
+
+User reviewed the refresh and chose to stay on `main` (original design). `design-refresh` branch retained for future reference.
+
+#### Layout restructure — 3-column bottom panel
+
+Motivated by friend's feedback that the chart should be larger. Explored layout options and landed on splitting the left column into two side-by-side columns of equal height instead of stacked.
+
+**Before:** `[Watchlist stacked over FlowPanel (160px)] | [RightSidebar flex-1]`
+
+**After:** `[Watchlist (160px)] | [MarketInternals (160px)] | [RightSidebar flex-1]`
+
+- Watchlist and the new middle column are the same fixed width as the original left column
+- RightSidebar is narrower but user confirmed that was acceptable
+- Removes stacking constraint — both left columns are full height
+
+#### Removed duplicate flow panels
+
+With FlowPanel now a standalone column alongside the FLOW tab in RightSidebar, two flow views were visible simultaneously. Resolved by replacing FlowPanel with a new `MarketInternals` component — data the friend cannot easily see in TradingView.
+
+#### New component: `src/components/MarketInternals.jsx`
+
+Live market breadth panel updating every 2.5 s (random walk simulation, same pattern as mockDataService):
+
+| Metric | Description | Colour logic |
+|--------|-------------|-------------|
+| NYSE TICK | Upticks minus downticks (−1200 to +1200) | Green ≥ 0, Red < 0; EXTREME / STRONG / NEUTRAL label |
+| TRIN (Arms Index) | Buying/selling pressure ratio | Green < 1.0, Amber < 1.5, Red ≥ 1.5 |
+| Put/Call Ratio | Market-wide options sentiment | Green < 0.8 (call-heavy), Amber neutral, Red > 1.1 (put-heavy) |
+| Adv / Dec | Advancing vs declining issues | Green when adv > 55%, Red when adv < 45% |
+| VIX | Volatility index | Green when falling, Red when rising |
+
+Each metric shows: large numeric value + contextual label + full-width 3px bar showing position within range.
+
+**Build result:** `npm run build` — 85 modules, 0 errors, 392 KB JS (124 KB gzip).

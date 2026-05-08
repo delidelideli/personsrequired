@@ -4,7 +4,7 @@ import TickerHeader  from './components/TickerHeader'
 import ChartPanel    from './components/ChartPanel'
 import ChartControls from './components/ChartControls'
 import Watchlist     from './components/Watchlist'
-import FlowPanel     from './components/FlowPanel'
+import MarketInternals from './components/MarketInternals'
 import RightSidebar  from './components/RightSidebar'
 import Footer        from './components/Footer'
 import DetachModal   from './components/DetachModal'
@@ -124,7 +124,7 @@ export default function App() {
       />
 
       <div className="flex flex-1 overflow-hidden min-h-0">
-        <div className="flex flex-col w-40 border-r border-[#1e3352] shrink-0 overflow-hidden">
+        <div className="flex flex-col w-40 border-r border-[#1e3352] shrink-0 overflow-y-auto">
           <Watchlist
             tickers={watchlist}
             activeTicker={ticker}
@@ -132,7 +132,10 @@ export default function App() {
             onAdd={addToWatchlist}
             livePrice={livePrice}
           />
-          <FlowPanel frozen={frozen} liveFlows={liveFlows} />
+        </div>
+
+        <div className="flex flex-col w-40 border-r border-[#1e3352] shrink-0 overflow-hidden">
+          <MarketInternals />
         </div>
 
         <div className="flex-1 overflow-hidden min-w-0">
