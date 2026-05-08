@@ -1,0 +1,97 @@
+Global Status Bar (top)
+
+Live index tickers: SPY, QQQ, VIX, BTC, DXY with color-coded % change
+Values update every 4 seconds to simulate live data
+TradingView shortcut button — opens current active ticker on tradingview.com in a new tab
+
+Search / Ticker Header
+
+Ticker search input — press Enter to load a ticker
+Exchange badge (NASDAQ / NYSE)
+Live price display with color (green = up, red = down)
+Price change with directional arrow
+Market status pill (OPEN)
+
+Chart
+
+Candlestick chart with volume bars beneath
+Hover tooltip on each candle showing O/H/L/C + Volume
+Scroll-wheel zoom (1x to 5x)
+Zoom level indicator fades in briefly on scroll
+Watermark showing active ticker symbol and timeframe
+Overlay lines: VWAP (blue dashed), PDH (red dashed), EMA 20 (green), EMA 50 (amber), EMA 200 (purple), PDL (blue dashed)
+Time labels on x-axis
+
+Timeframe Tray
+
+Buttons: 1m, 5m, 15m, 1h, 4h, D, W
+Active timeframe highlighted, updates chart watermark label
+Settings gear button opens/closes overlay panel
+
+Overlay Settings Panel (inline, expands below tray)
+
+Averages section: EMA 20, EMA 50, EMA 200 — each toggles the SVG line on/off
+Levels section: VWAP, PDH, PMH, PDL, PML — each toggles line on/off
+Extras section: Vol Profile, RSI, MACD, BB — toggleable (Phase 2 placeholders)
+Each pill is color-coded when active
+
+Watchlist (left column)
+
+6 tickers: NVDA, TSLA, META, AAPL, SPY, AMD
+Each row: symbol, price, % change, mini strength bar
+Click any row to switch the active ticker — updates chart, header, all signal cards, AI thesis, footer
+Active row highlighted in blue
+Add button — prompts for ticker symbol and appends a new row
+
+Flow (left column, below watchlist)
+
+Smart Money filter buttons: $50k+, $100k+, $500k+ — filters visible rows by dollar size
+5 flow rows showing: ticker, contract (e.g. 930C 5/17), price, dollar size, type (SWEEP / BLOCK / SPLIT)
+Color-coded left border: green = bullish, red = bearish, amber = split, blue = block
+Rows below the active filter threshold are hidden
+
+Right Sidebar — 4 tabs
+FLOW tab:
+
+5 signal cards: Call Sweep, Dark Pool, Vol Spike, Short Interest, L2 Pressure
+Each card has a label, value, and sub-label
+Values update when active ticker changes
+
+ECON tab (ForexFactory):
+
+Date header
+8 economic events: CPI m/m, Core CPI y/y, ISM Services PMI, FOMC Minutes, PPI, Core PCE, Unemployment Claims, UoM Consumer Sentiment
+Each event shows: time, name, impact badge (HIGH/MED/LOW), previous/forecast/actual values
+Released events highlighted with green "Act" value
+Next-up event highlighted in blue tint
+
+DISC tab (Discord):
+
+Server name and live connection status
+3 channel tabs: #alerts, #signals, #general — switching updates input placeholder
+Message feed with avatars, usernames, timestamps
+Pinned alert message with auto-parsed trade card showing Entry, Target, Trim, Stop
+Message input — press Enter to post your own message into the feed
+
+AI tab:
+
+"9:25 AM THESIS" header with amber tint
+Timestamp row showing when thesis was generated
+Refresh button — rewrites thesis text with fade animation, updates timestamp
+4 AI cards: NVDA, TSLA, META, SPY
+Each card: ticker symbol, bias badge (BULLISH/BEARISH/NEUTRAL with solid color fill), thesis paragraph, signal tags
+First card (active ticker) updates dynamically when watchlist selection changes
+
+Footer
+
+Discord icon + latest signal text (updates when ticker changes)
+iOS sync toggle — switches between active (green) and off (gray)
+Detach button — opens confirmation modal showing current state (ticker, timeframe, active overlays, flow filter, sync status) before opening window
+Bell icon — mutes/unmutes alerts, icon switches to bell-off
+Settings icon — Phase 2 placeholder
+
+Detach Modal
+
+Overlay showing saved state snapshot
+Confirms: ticker, timeframe, active overlays, flow filter setting, iOS sync status
+Open Window / Cancel buttons

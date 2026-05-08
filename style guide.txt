@@ -1,0 +1,11 @@
+"I want you to build the TradeDesk frontend, but I want to strictly avoid 'generic AI' design patterns. Follow these constraints:
+
+Data-Grid Layout: Every section is a rigid panel. Use a 1px border of #1e3352. No drop shadows.
+
+Typography: Use JetBrains Mono for numbers. Ensure tabular-nums is active so the UI doesn't jitter when the price updates.
+
+Color Palette: Strictly use Deep Slate (#0c1119) for backgrounds and Emerald (#00ff88) / Vivid Rose (#ff0055) for price action.
+
+The 'Freeze' Overlay: When the user clicks Pause, the panel should not just 'stop.' It should have a subtle diagonal-stripe CSS 'glass' overlay to visually signal it is in historical mode.
+
+Indicators: Toggles must feel like hardware switches. When active, use a subtle 1px neon border around the button."

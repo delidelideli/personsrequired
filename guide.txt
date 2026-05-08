@@ -1,0 +1,60 @@
+Role & Task
+You are a Lead Software Architect and Senior Full-Stack Developer. Your task is to design and build a Manifest V3 Chrome Extension for day traders. This app must be built from the ground up to be a commercial SaaS product.
+
+Core Product Identity
+Format: A browser sidebar companion (locked to the side of the browser) that can detach into a standalone, always-on-top window.
+
+Philosophy: An "Intelligence Layer" HUD. It does not execute trades; it provides high-speed data, AI interpretation, and signal filtering to help the trader make decisions.
+
+Detailed Feature Requirements (Consolidated from Specs)
+1. The Charting Engine
+Library: Use TradingView Lightweight Charts (WebGL-based).
+
+Timeframes: Support 1m, 5m, 15m, 1h, and Daily candles.
+
+Indicator Toggles: A row of buttons at the bottom to toggle visibility for:
+
+VWAP (Volume Weighted Average Price)
+
+EMA 20, 50, 200
+
+Price Levels: Previous Day High (PDH) and Pre-Market High (PMH).
+
+Price Action: Must handle real-time candlestick updates via WebSockets.
+
+2. AI Intelligence Feed
+Context: The backend analyzes order flow and technical posture.
+
+Output: Display a 2-3 sentence plain-English summary (e.g., "NVDA holds VWAP; heavy call sweeps detected at $900 strike.")
+
+Sentiment: Color-code the AI section (Bullish/Bearish/Neutral) based on incoming JSON tags.
+
+3. Tactical "Freeze" System
+Requirement: A global "Freeze" toggle for the Order Flow (options sweeps) and Level 2 (bid/ask ladder) sections.
+
+Logic: When frozen, incoming data must be buffered in the background. When unfrozen, the UI "catches up" by injecting the buffered data. This prevents visual overload during high-volatility moves.
+
+4. Community & Morning Prep
+Discord Integration: Design a layout to display "Trade Cards" (parsed entry/target/trim levels from Discord channels).
+
+Morning Briefing: A specialized UI state that displays a pre-market research memo (Thesis, Risk Score, Key Levels).
+
+Technical & Security Architecture
+1. Secure Backend-Proxy Model
+No Direct Keys: The extension MUST NOT hold API keys (OpenAI, Polygon, etc.).
+
+Server-Side Logic: The extension communicates with a Node.js/Express backend. The backend fetches the data, processes the AI summaries, and "pushes" the final, cleaned JSON to the extension via Socket.io.
+
+2. Authentication & Commercialization
+Auth Wall: Implement a login screen using Clerk or JWT.
+
+Subscription Check: The app must verify the user's Stripe status on every session. Hide all data behind a "Subscription Required" overlay if inactive.
+
+Anti-Piracy: Set up a one-session limit per user ID.
+
+UI/UX Direction
+Theme: "Bloomberg Dark" — Background #0c1119, Borders #1e3352, Accents: Green #00ff88, Pink #ff0055, Blue #38bdf8.
+
+Density: High information density but clean spacing. Use monospace fonts for all price data.
+
+Detachment: Use the chrome.windows.create API to pop the sidebar into a standalone type: 'popup' window.

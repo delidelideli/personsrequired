@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   Single source of truth — matches style guide.txt exactly.
+   All component classes below reference only these variables.
+═══════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    --td-bg:     #0c1119;   /* Deep Slate   — all backgrounds              */
+    --td-border: #1e3352;   /* panel border — 1px, no shadow, everywhere   */
+    --td-up:     #00ff88;   /* Emerald      — bullish / price up           */
+    --td-down:   #ff0055;   /* Vivid Rose   — bearish / price down         */
+    --td-blue:   #38bdf8;   /* blue accent                                 */
+    --td-amber:  #f59e0b;   /* amber accent                                */
+    --td-purple: #a855f7;   /* purple accent                               */
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background-color: var(--td-bg);
+    /* Default text: mid-slate — not full white, not invisible */
+    color: #64748b;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Minimal scrollbar — matches the grid aesthetic */
+  ::-webkit-scrollbar          { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track    { background: var(--td-bg); }
+  ::-webkit-scrollbar-thumb    { background: var(--td-border); border-radius: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT CLASSES
+   Encode every rule from the style guide into reusable classes
+   so no panel or number ever diverges from the system.
+═══════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Data-grid panel ────────────────────────────────────────
+     "Every section is a rigid panel. Use a 1px border of
+     #1e3352. No drop shadows."
+     border-radius: 0 enforces the rigid, grid-cell aesthetic. */
+  .panel {
+    background-color: var(--td-bg);
+    border: 1px solid var(--td-border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Horizontal divider inside a panel — same spec as outer border */
+  .panel-row {
+    border-bottom: 1px solid var(--td-border);
+  }
+
+  /* Vertical divider */
+  .panel-col {
+    border-right: 1px solid var(--td-border);
+  }
+
+  /* ── Numeric / price typography ─────────────────────────────
+     "Use JetBrains Mono for numbers. Ensure tabular-nums is
+     active so the UI doesn't jitter when the price updates."
+
+     .num is the base — apply to every price, count, or stat.
+     font-feature-settings forces the tnum OpenType feature
+     alongside font-variant-numeric for full browser coverage. */
+  .num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+    letter-spacing: 0;
+  }
+
+  /* Size scale — line-height locked to 1 so prices never push rows */
+  .num-2xl { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+  .num-xl  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 18px; line-height: 1; font-weight: 600; letter-spacing: -0.01em; }
+  .num-lg  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 14px; line-height: 1; font-weight: 600; }
+  .num-md  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 11px; line-height: 1; font-weight: 500; }
+  .num-sm  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size: 10px; line-height: 1; font-weight: 400; }
+  .num-xs  { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; font-size:  9px; line-height: 1; font-weight: 400; }
+
+  /* Semantic price color — always use these, never raw hex on prices */
+  .price-up   { color: var(--td-up);   }
+  .price-down { color: var(--td-down); }
+
+  /* ── Section label ──────────────────────────────────────────
+     All-caps, tracked out, intentionally subdued.
+     Used for panel headers, badge text, filter labels. */
+  .td-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1e3352;
+  }
+
+  /* ── Hardware switch toggle ─────────────────────────────────
+     "Toggles must feel like hardware switches. When active,
+     use a subtle 1px neon border around the button."
+
+     Base state: td-border ring, muted text.
+     Active state: add the matching neon ring via a modifier class.
+     No border-radius — consistent with the rigid grid. */
+  .hw-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1;
+    border: 1px solid var(--td-border);
+    border-radius: 0;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: none;
+    transition: border-color 100ms ease, color 100ms ease, box-shadow 100ms ease;
+  }
+
+  .hw-switch:hover:not(.hw-on-up):not(.hw-on-down):not(.hw-on-blue):not(.hw-on-amber):not(.hw-on-purple) {
+    border-color: #334155;
+    color: #64748b;
+  }
+
+  /* Active variants — one per accent color */
+  .hw-on-up     { border-color: var(--td-up);     color: var(--td-up);     box-shadow: 0 0 0 1px var(--td-up);     }
+  .hw-on-down   { border-color: var(--td-down);   color: var(--td-down);   box-shadow: 0 0 0 1px var(--td-down);   }
+  .hw-on-blue   { border-color: var(--td-blue);   color: var(--td-blue);   box-shadow: 0 0 0 1px var(--td-blue);   }
+  .hw-on-amber  { border-color: var(--td-amber);  color: var(--td-amber);  box-shadow: 0 0 0 1px var(--td-amber);  }
+  .hw-on-purple { border-color: var(--td-purple); color: var(--td-purple); box-shadow: 0 0 0 1px var(--td-purple); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════════ */
+@layer utilities {
+
+  /* "When the user clicks Pause, the panel should not just stop.
+     It should have a subtle diagonal-stripe CSS glass overlay
+     to visually signal it is in historical mode."
+     Applied as an absolute-positioned child over the chart area. */
+  .freeze-stripe {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent       0px,
+      transparent       8px,
+      rgba(56, 189, 248, 0.035) 8px,
+      rgba(56, 189, 248, 0.035) 9px
+    );
+  }
+
+  /* Standalone tabular-nums utility for one-off use */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+}
