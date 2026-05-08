@@ -4,17 +4,16 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
 import { signToken, verifyToken, checkSubscription, TEST_USER } from './auth.js'
-import { IndexSimulator, TickerSimulator } from './demo/priceSimulator.js'
-import { startFlowStream } from './demo/orderFlow.js'
+import dataProvider from './dataProvider.js'
 
 const PORT      = parseInt(process.env.PORT ?? '3001', 10)
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
 const app = express()
-app.use(cors({ origin: '*' }))
+app.use(cors({ origin: '*' }))   // TODO production: lock to chrome-extension://<ID>
 app.use(express.json())
 
-// ── REST: auto-login (demo) or credential check ───────────────────────────
+// ── REST: auth ────────────────────────────────────────────────────────────────
 app.post('/auth/login', (req, res) => {
   const { email, password } = req.body ?? {}
   const validCred = email === TEST_USER.email && password === process.env.TEST_PASSWORD
@@ -23,78 +22,77 @@ app.post('/auth/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' })
   }
 
-  // Demo mode: accept any request — hardcoded test user is always logged in
   const token = signToken({ id: TEST_USER.id, email: TEST_USER.email, plan: TEST_USER.plan })
   res.json({ token, user: { id: TEST_USER.id, email: TEST_USER.email, plan: TEST_USER.plan } })
+})
+
+// ── REST: historical OHLCV ────────────────────────────────────────────────────
+// SWAP dataProvider.getHistory for a real API call in production.
+// The client always hits this endpoint — no candle generation in the browser.
+app.get('/history', async (req, res) => {
+  const { ticker = 'NVDA', timeframe = '5m' } = req.query
+  try {
+    const candles = await dataProvider.getHistory(ticker, timeframe)
+    res.json(candles)
+  } catch (err) {
+    console.error('[history]', err.message)
+    res.status(500).json({ error: 'Failed to fetch history' })
+  }
 })
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, demo: DEMO_MODE })
 })
 
-// ── HTTP server ───────────────────────────────────────────────────────────
+// ── HTTP server ───────────────────────────────────────────────────────────────
 const httpServer = createServer(app)
 
-// ── Socket.io ─────────────────────────────────────────────────────────────
+// ── Socket.io ─────────────────────────────────────────────────────────────────
 const io = new Server(httpServer, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
 })
 
-// JWT auth middleware — runs before 'connection' fires
 io.use((socket, next) => {
-  const token   = socket.handshake.auth?.token
-  const payload = verifyToken(token)
-  if (!payload) {
-    return next(new Error('auth_error'))
-  }
+  const payload = verifyToken(socket.handshake.auth?.token)
+  if (!payload) return next(new Error('auth_error'))
   socket.user = payload
   next()
 })
 
 io.on('connection', async (socket) => {
-  // Stripe subscription gate — no data flows without an active sub
   const sub = await checkSubscription(socket.user.id)
   if (!sub.active) {
-    socket.emit('sub_required', {
-      message: 'No active subscription. Visit tradedesk.io to subscribe.',
-    })
+    socket.emit('sub_required', { message: 'No active subscription.' })
     socket.disconnect(true)
     return
   }
 
   console.log(`[+] ${socket.user.email}  plan=${socket.user.plan}`)
 
-  // ── Index bar stream: SPY / QQQ / VIX / BTC / DXY every 2 s ─────────
-  const idxSim      = new IndexSimulator()
-  const idxInterval = setInterval(() => {
-    socket.emit('index_tick', idxSim.tick())
-  }, 2000)
-
-  // ── Order flow stream ─────────────────────────────────────────────────
-  const stopFlow = startFlowStream(socket)
-
-  // ── Per-ticker candle stream ──────────────────────────────────────────
-  let priceInterval = null
+  // ── Start streams via data provider ──────────────────────────────────────
+  const stopIndex = dataProvider.startIndexStream(data => socket.emit('index_tick', data))
+  const stopFlow  = dataProvider.startFlowStream(ev   => socket.emit('flow_event', ev))
+  let   stopTicker = null
 
   function subscribeTicker(ticker, timeframe) {
-    if (priceInterval) clearInterval(priceInterval)
-    const sim = new TickerSimulator(ticker, timeframe)
-    priceInterval = setInterval(() => {
-      socket.emit('price_tick', sim.tick())
-    }, 1000)
+    if (stopTicker) stopTicker()
+    stopTicker = dataProvider.startTickerStream(
+      ticker ?? 'NVDA',
+      timeframe ?? '5m',
+      data => socket.emit('price_tick', data),
+    )
   }
 
-  // Default on connect
   subscribeTicker('NVDA', '5m')
 
   socket.on('subscribe_ticker', ({ ticker, timeframe }) => {
-    subscribeTicker(ticker ?? 'NVDA', timeframe ?? '5m')
+    subscribeTicker(ticker, timeframe)
   })
 
   socket.on('disconnect', () => {
-    clearInterval(idxInterval)
-    clearInterval(priceInterval)
+    stopIndex()
     stopFlow()
+    if (stopTicker) stopTicker()
     console.log(`[-] ${socket.user.email}`)
   })
 })

@@ -466,3 +466,67 @@ if (chrome.sidePanel) {
 | `src/components/ChartPanel.jsx` | `fmtTime` and `timeVisible` flag now use `tfIsDaily()` instead of hardcoded `['D','W']` check |
 
 **Build result:** `npm run build` — 87 modules, 0 errors, 396 KB JS (125 KB gzip).
+
+---
+
+## 2026-05-08 (session 10)
+
+### API Readiness — Data Provider Abstraction + Architecture Prep
+
+Four safe changes that keep demo mode fully working while making real data integration a drop-in swap.
+
+#### New file: `server/utils.js`
+Server-side port of `tfToSeconds` and `tfBarCount` — identical logic to `src/lib/timeframeUtils.js` but kept separate so the server has no dependency on the Vite/browser build.
+
+#### Fix: `server/demo/priceSimulator.js`
+Removed the `CANDLE_MS` lookup table (same bug that existed in the client before session 9). `TickerSimulator` now calls `tfToSeconds(timeframe) * 1000` — every timeframe including `30m`, `4h`, and all custom intervals produce correct candle boundaries server-side.
+
+#### New file: `server/dataProvider.js`
+Data provider abstraction layer wrapping all three demo simulators behind a clean interface:
+
+| Method | Demo implementation | Production swap |
+|--------|-------------------|-----------------|
+| `getHistory(ticker, timeframe)` | Seeded candle generator (ported from `chartData.js`) | Polygon.io REST `/v2/aggs/...` + Redis cache |
+| `startIndexStream(emitFn)` | `IndexSimulator` every 2s | Polygon WebSocket `A.SPY`, `I:VIX`, `X:BTCUSD` |
+| `startTickerStream(ticker, tf, emitFn)` | `TickerSimulator` every 1s | Polygon WebSocket per-symbol aggregate |
+| `startFlowStream(emitFn)` | `orderFlow.js` generator | Unusual Whales / Market Chameleon API |
+
+Each method is clearly marked with `// SWAP:` comments describing exactly what replaces it.
+
+#### Updated: `server/index.js`
+- Imports `dataProvider` instead of simulators directly
+- Added `GET /history?ticker=&timeframe=` endpoint — calls `dataProvider.getHistory`, returns JSON candle array
+- Socket handler refactored to use `dataProvider.start*Stream()` — stop functions returned and called on disconnect
+- Comments mark where CORS origin `'*'` must be replaced with the production extension ID
+
+#### New file: `src/lib/config.js`
+Single source for `SERVER_URL`:
+```js
+export const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:3001'
+```
+In production: set `VITE_SERVER_URL=https://api.tradedesk.io` in a root `.env` file.
+
+#### Updated: `src/lib/socket.js`
+Imports `SERVER_URL` from `config.js` — no more hardcoded `localhost:3001`.
+
+#### Updated: `src/components/ChartPanel.jsx`
+Chart data load is now async — fetches from `GET /history` with an `AbortController` so stale requests are cancelled on rapid ticker switching. Falls back to `generateCandles()` if the server is offline. When real data is wired, only the server-side `getHistory` implementation changes — ChartPanel is already correct.
+
+#### New file: `future_setup.md`
+Comprehensive guide covering everything needed to go from demo to production:
+- Real-time price providers (Polygon.io recommended) with exact WebSocket/REST endpoints
+- Options flow providers (Unusual Whales, Market Chameleon)
+- Historical data caching strategy (in-memory → Redis)
+- Upstream WebSocket broker/fanout architecture for multi-user scale
+- Auth & user management (Supabase recommended)
+- Stripe integration (webhook events, DB subscription tracking)
+- Multi-ticker watchlist price streams
+- Environment variable reference for both frontend and server
+- CORS lockdown + manifest updates for production
+- Chrome Web Store deployment checklist
+- Server hosting recommendations (Railway)
+- Mobile sync architecture
+- Error handling & monitoring (Sentry)
+- Performance notes (debounce, caching, flow tape cap)
+
+**Build result:** `npm run build` — 88 modules, 0 errors, 396 KB JS (125 KB gzip).

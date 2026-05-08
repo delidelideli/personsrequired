@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { createChart, LineStyle, CrosshairMode } from 'lightweight-charts'
 import { generateCandles, calcEMA, calcVWAP, calcLevels } from '../lib/chartData'
 import { tfIsDaily } from '../lib/timeframeUtils'
+import { SERVER_URL } from '../lib/config'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtPrice(v) { return v?.toFixed(2) ?? '—' }
@@ -219,44 +220,57 @@ export default function ChartPanel({ ticker = 'NVDA', timeframe = '5m', overlays
     const { candleSeries, volSeries, vwapSeries, ema20Series, ema50Series, ema200Series } = seriesRef.current
     if (!candleSeries) return
 
-    const candles   = generateCandles(ticker, timeframe)
-    const volData   = candles.map(c => ({
-      time:  c.time,
-      value: c.volume,
-      color: c.close >= c.open ? 'rgba(0,255,136,0.22)' : 'rgba(255,0,85,0.22)',
-    }))
-    const levels = calcLevels(candles)
+    const controller = new AbortController()
 
-    candleSeries.setData(candles)
-    volSeries.setData(volData)
-    vwapSeries.setData(calcVWAP(candles))
-    ema20Series.setData(calcEMA(candles, 20))
-    ema50Series.setData(calcEMA(candles, 50))
-    ema200Series.setData(calcEMA(candles, 200))
+    async function load() {
+      let candles
+      try {
+        const res = await fetch(
+          `${SERVER_URL}/history?ticker=${encodeURIComponent(ticker)}&timeframe=${encodeURIComponent(timeframe)}`,
+          { signal: controller.signal },
+        )
+        candles = res.ok ? await res.json() : generateCandles(ticker, timeframe)
+      } catch {
+        // Server offline or request aborted — fall back to local generation
+        candles = generateCandles(ticker, timeframe)
+      }
 
-    // Rebuild price lines on every data reload
-    const prev = linesRef.current
-    if (prev.pdh) candleSeries.removePriceLine(prev.pdh)
-    if (prev.pdl) candleSeries.removePriceLine(prev.pdl)
-    if (prev.pmh) candleSeries.removePriceLine(prev.pmh)
-    if (prev.pml) candleSeries.removePriceLine(prev.pml)
+      if (controller.signal.aborted) return
 
-    linesRef.current = {
-      pdh: candleSeries.createPriceLine({ price: levels.pdh, color: '#ff0055', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: 'PDH' }),
-      pdl: candleSeries.createPriceLine({ price: levels.pdl, color: '#38bdf8', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: 'PDL' }),
-      pmh: candleSeries.createPriceLine({ price: levels.pmh, color: '#ff0055', lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: 'PMH' }),
-      pml: candleSeries.createPriceLine({ price: levels.pml, color: '#38bdf8', lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: 'PML' }),
+      const volData = candles.map(c => ({
+        time:  c.time,
+        value: c.volume,
+        color: c.close >= c.open ? 'rgba(0,255,136,0.22)' : 'rgba(255,0,85,0.22)',
+      }))
+      const levels = calcLevels(candles)
+
+      candleSeries.setData(candles)
+      volSeries.setData(volData)
+      vwapSeries.setData(calcVWAP(candles))
+      ema20Series.setData(calcEMA(candles, 20))
+      ema50Series.setData(calcEMA(candles, 50))
+      ema200Series.setData(calcEMA(candles, 200))
+
+      const prev = linesRef.current
+      if (prev.pdh) candleSeries.removePriceLine(prev.pdh)
+      if (prev.pdl) candleSeries.removePriceLine(prev.pdl)
+      if (prev.pmh) candleSeries.removePriceLine(prev.pmh)
+      if (prev.pml) candleSeries.removePriceLine(prev.pml)
+
+      linesRef.current = {
+        pdh: candleSeries.createPriceLine({ price: levels.pdh, color: '#ff0055', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: 'PDH' }),
+        pdl: candleSeries.createPriceLine({ price: levels.pdl, color: '#38bdf8', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: 'PDL' }),
+        pmh: candleSeries.createPriceLine({ price: levels.pmh, color: '#ff0055', lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: 'PMH' }),
+        pml: candleSeries.createPriceLine({ price: levels.pml, color: '#38bdf8', lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: 'PML' }),
+      }
+
+      chartRef.current?.applyOptions({ watermark: { text: `${ticker} – ${timeframe}` } })
+      chartRef.current?.timeScale().applyOptions({ timeVisible: !tfIsDaily(timeframe) })
+      chartRef.current?.timeScale().fitContent()
     }
 
-    // Update watermark text
-    chartRef.current?.applyOptions({ watermark: { text: `${ticker} – ${timeframe}` } })
-
-    // Show/hide time component based on timeframe
-    chartRef.current?.timeScale().applyOptions({
-      timeVisible: !tfIsDaily(timeframe),
-    })
-
-    chartRef.current?.timeScale().fitContent()
+    load()
+    return () => controller.abort()
   }, [ticker, timeframe])
 
   // ── Live tick: update current candle from socket stream ─────────────────

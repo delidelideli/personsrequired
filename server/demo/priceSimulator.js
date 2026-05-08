@@ -1,4 +1,5 @@
 // Brownian-motion price simulator — no real API keys required.
+import { tfToSeconds } from '../utils.js'
 
 const BASE_PRICES = {
   NVDA: 924.50, TSLA: 248.12, META: 512.33, AAPL: 189.67,
@@ -6,10 +7,6 @@ const BASE_PRICES = {
   VIX:  18.42,  BTC:  67420,  DXY:  104.21,
 }
 
-const CANDLE_MS = {
-  '1m': 60_000, '5m': 300_000, '15m': 900_000,
-  '1h': 3_600_000, '4h': 14_400_000, 'D': 86_400_000, 'W': 604_800_000,
-}
 
 // Per-symbol volatility (fraction per tick)
 const VOLATILITY = {
@@ -51,7 +48,7 @@ export class IndexSimulator {
 export class TickerSimulator {
   constructor(ticker, timeframe) {
     this.ticker       = ticker
-    this.tfMs         = CANDLE_MS[timeframe] ?? 300_000
+    this.tfMs         = tfToSeconds(timeframe) * 1000
     this.price        = BASE_PRICES[ticker] ?? 100
     this.sessionOpen  = this.price
     this.candleStart  = Math.floor(Date.now() / this.tfMs) * this.tfMs
