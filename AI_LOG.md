@@ -597,3 +597,62 @@ const CHART_HEIGHT_CLASS = { 200: 'h-[200px]', 280: 'h-[280px]', 360: 'h-[360px]
 Template literals are not safe with Tailwind's purge — all class strings must appear as literals.
 
 **Build result:** `npm run build` — 89 modules, 0 errors, 405 KB JS (128 KB gzip).
+
+---
+
+## 2026-05-09 (session 12)
+
+### Overlay Indicators + Settings Polish + Custom Flow Filter
+
+#### New chart overlays — `src/lib/chartData.js` + `src/components/ChartPanel.jsx`
+
+Three new indicators added to the chart. All default to off; toggled via Settings → Overlays.
+
+| Indicator | Key | Series | Colors |
+|-----------|-----|--------|--------|
+| SMA 20 | `ma` | 1 line | `#cbd5e1` (slate) |
+| Bollinger Bands (20, 2σ) | `bb` | 3 lines — upper/lower dashed, middle dotted | `#f97316` (orange) |
+| Ichimoku Cloud (9/26/52) | `ichimoku` | 4 lines — Tenkan, Kijun, Span A, Span B | `#f43f5e` / `#818cf8` / `#34d399` / `#fb923c` |
+
+New calc functions in `chartData.js`: `calcSMA(candles, period)`, `calcBB(candles, period, mult)`, `calcIchimoku(candles)`.
+
+`ChartPanel.jsx`: 8 new line series created on mount (stored in `seriesRef`), data loaded on every ticker/timeframe change alongside existing series, visibility controlled by the existing `[overlays]` effect.
+
+All timeframes have enough bars (min 60) to satisfy the largest period (Ichimoku Senkou B = 52).
+
+#### Settings modal — Overlays section updated
+
+`src/components/SettingsModal.jsx`: added SMA 20, BB Bands, Ichimoku to `OVERLAY_LIST` with color dots and descriptions.
+
+#### Settings modal — Alerts section redesigned
+
+- Removed `$50k+` preset (too small for meaningful signals)
+- Presets now: `$100K+` / `$500K+` / `$1M+`
+- **Custom filter input**: number field + K/M unit selector + SAVE button
+  - Saved customs appear as chips inline with presets; each has a `×` to remove
+  - Saved list persists to `localStorage('td_custom_filters')`
+  - Custom labels like `$250K+` or `$1.5M+` parsed by `parseFilterThreshold()` in FlowTab
+
+`App.jsx`: default `flowFilter` updated from `'$50k+'` to `'$100K+'`.
+
+`FlowTab.jsx`: replaced static `FILTER_THRESHOLDS` map with `parseFilterThreshold(label)` — handles both built-in formats (`$100k+`) and custom formats (`$250K+`, `$1.5M+`) via regex.
+
+#### Footer gear button
+
+`src/components/Footer.jsx`: ⚙ button enlarged from `text-[10px]` to `text-[14px]` with hover highlight.
+
+**Build result:** `npm run build` — 89 modules, 0 errors, 411 KB JS (129 KB gzip).
+
+---
+
+### Free API options discussed (not yet implemented)
+
+Identified three zero-cost data sources for a future real-data phase:
+
+| Provider | Free tier | What it covers |
+|----------|-----------|----------------|
+| Polygon.io | REST, 15-min delayed | Historical OHLCV → replaces `dataProvider.getHistory` |
+| Finnhub | WebSocket, real-time, 60 calls/min | Live price ticks → replaces `startTickerStream` |
+| Twelve Data | REST + WebSocket, 800 req/day | Historical + real-time quotes |
+
+Options flow (sweeps/blocks/splits) has no free source — cheapest is Unusual Whales ~$50/mo. Decision: revisit real-data hookup in a future session.
